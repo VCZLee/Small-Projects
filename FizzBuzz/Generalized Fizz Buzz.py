@@ -24,8 +24,8 @@ generalized_fizzbuzz(3, 16, 3, 5, "Fizz", "Buzz")
 def hypergeneralized_fizzbuzz(nums, divisors, words, word_priority):
     new_divisors = []
     divisors_dict = {}
-    for counter, element in enumerate(divisors):
-        divisors_dict.update({element: words[counter]})
+    for i, j in enumerate(divisors):
+        divisors_dict.update({j: words[i]})
     for i in word_priority:
         new_divisors.append(divisors[i - 1])
     for i in nums:
