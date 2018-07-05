@@ -26,7 +26,7 @@ for i in range(1, num_iterations):
 
 
 
-integer_scale = 2
+integer_scale = 1
 sizing = max(recaman_list) * integer_scale
 
 screen = turtle.Screen()
