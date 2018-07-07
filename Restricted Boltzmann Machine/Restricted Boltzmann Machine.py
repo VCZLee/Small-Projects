@@ -1,11 +1,11 @@
 import numpy as np
 
-num_visible = 6
-num_hidden = 3
-learning_rate = 0.1
-batch_size = 7
-cd_iterations = 1
-num_epochs = 2500
+# num_visible = 6
+# num_hidden = 3
+# learning_rate = 0.1
+# batch_size = 7
+# cd_iterations = 1
+# num_epochs = 2500
 
 num_weights = num_visible*num_hidden
 
@@ -65,11 +65,26 @@ for row in range(data.shape[0]):
 
 print(output-data)
 
+
 class RestrictedBoltzmannMachine:
-    def __init__(self,num_hidden):
-        self.weights = np.random.randn(num_visible, num_hidden)
-        self.forward_bias = np.random.randn(1, num_hidden)
-        self.backward_bias = np.random.randn(1, num_visible)
+    def __init__(self, num_hidden):
+        self.weights = None
+        self.forward_bias = None
+        self.backward_bias = None
+        self.num_hidden = num_hidden
+        self.num_visible = None
+
+    def fit(self, x, learning_rate, batch_size, cd_iterations, epochs):
+        self.num_visible = x.shape[1]
+        self.weights = np.random.randn(self.num_visible, self.num_hidden)
+        self.forward_bias = np.random.randn(1, self.num_hidden)
+        self.backward_bias = np.random.randn(1, self.num_visible)
+        for epoch in range(self.num_epochs):
+            random_rows = np.random.choice(x.shape[0], self.batch_size, replace=False)
+            train = x[random_rows, :]
+            contrastive_divergence_list = []
+            forward_bias_list = []
+            backward_bias_list = []
 
 
 
