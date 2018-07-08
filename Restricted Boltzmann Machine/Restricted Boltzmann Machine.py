@@ -1,4 +1,8 @@
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import Binarizer
+
 
 class RestrictedBoltzmannMachine:
     def __init__(self, num_hidden):
@@ -59,14 +63,33 @@ class RestrictedBoltzmannMachine:
         return output
 
 
-data = np.array([[1, 1, 1, 0, 0, 0],
-                 [1, 0, 1, 0, 0, 0],
-                 [1, 1, 1, 0, 0, 0],
-                 [0, 0, 1, 1, 1, 0],
-                 [0, 0, 1, 1, 0, 0],
-                 [0, 0, 1, 1, 1, 0],
-                 [1, 1, 1, 0, 0, 1]])
+data = pd.read_csv("C:/Users/Jintoboy/PycharmProjects/Jupyter-Notebooks/Kaggle/MNIST/Data/train.csv", index_col = None)
+data = data.loc[(data.label == 3)]
+data = data.drop('label', 1)
 
-rbm = RestrictedBoltzmannMachine(num_hidden=4)
-rbm = rbm.fit(data, 0.1, 3, 1, 10000)
-print(rbm.reconstruct(data))
+quantizer = Binarizer(threshold = 127.5).fit(data)
+data = quantizer.transform(data)
+
+ROW = 4
+COLUMN = 5
+for i in range(ROW * COLUMN):
+    image = data[i].reshape((28,28))
+    plt.subplot(ROW, COLUMN, i+1)
+    plt.imshow(image, cmap='gray')
+    plt.axis('off')  # do not show axis value
+plt.tight_layout()   # automatic padding between subplots
+plt.show()
+
+
+rbm = RestrictedBoltzmannMachine(num_hidden=25)
+rbm = rbm.fit(data,learning_rate=0.1, batch_size=5, cd_iterations=1, epochs=2500)
+
+reconstruction = rbm.reconstruct(data[1:21])
+
+for i in range(ROW * COLUMN):
+    image = reconstruction[i].reshape((28,28))
+    plt.subplot(ROW, COLUMN, i+1)
+    plt.imshow(image, cmap='gray')
+    plt.axis('off')
+plt.tight_layout()
+plt.show()
