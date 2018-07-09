@@ -49,7 +49,7 @@ class RestrictedBoltzmannMachine:
             self.backward_bias = self.backward_bias + learning_rate * np.mean(backward_bias_list, axis=0)
         return self
 
-    def reconstruct(self,x):
+    def reconstruct(self, x):
         output = np.empty((0, x.shape[1])).astype(int)
         for row in range(x.shape[0]):
             visible = x[row, :]
@@ -62,13 +62,34 @@ class RestrictedBoltzmannMachine:
             output = np.append(output, recon, axis=0)
         return output
 
+    def transform(self, x):
+        output = np.empty((0, self.num_hidden)).astype(int)
+        for row in range(x.shape[0]):
+            visible = x[row, :]
+            hidden_activation = visible.dot(self.weights) + self.forward_bias
+            hidden_prob = 1 / (1 + np.exp(-hidden_activation))
+            hidden = (np.random.uniform(size=self.num_hidden) < hidden_prob).astype(int)
+            output = np.append(output, hidden, axis=0)
+        return output
+
+    def inverse_transform(self, x):
+        output = np.empty((0, self.num_visible)).astype(int)
+        for row in range(x.shape[0]):
+            hidden = x[row, :]
+            recon_activation = hidden.dot(np.transpose(self.weights)) + self.backward_bias
+            recon_prob = 1 / (1 + np.exp(-recon_activation))
+            recon = (np.random.uniform(size=self.num_visible) < recon_prob).astype(int)
+            output = np.append(output, recon, axis=0)
+        return output
+
 
 data = pd.read_csv("C:/Users/Jintoboy/PycharmProjects/Jupyter-Notebooks/Kaggle/MNIST/Data/train.csv", index_col = None)
-data = data.loc[(data.label == 3)]
+data = data.loc[(data.label == 0)]
 data = data.drop('label', 1)
 
 quantizer = Binarizer(threshold = 127.5).fit(data)
 data = quantizer.transform(data)
+
 
 ROW = 4
 COLUMN = 5
@@ -82,7 +103,9 @@ plt.show()
 
 
 rbm = RestrictedBoltzmannMachine(num_hidden=25)
-rbm = rbm.fit(data,learning_rate=0.1, batch_size=5, cd_iterations=1, epochs=2500)
+rbm = rbm.fit(data,learning_rate=0.1, batch_size=3, cd_iterations=1, epochs=10000)
+
+print(rbm.transform(data[1:2]))
 
 reconstruction = rbm.reconstruct(data[1:21])
 
