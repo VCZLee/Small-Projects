@@ -15,4 +15,3 @@ with tf.Session() as sess:
     tf_weights = tf.random_normal((num_visible, num_hidden))
     tf_forward_bias = tf.random_normal((1, num_hidden))
     tf_backward_bias = tf.random_normal((1, num_visible))
-    print(sess.run(tf_forward_bias))
