@@ -11,9 +11,6 @@ class RestrictedBoltzmannMachine:
         self.backward_bias = None
         self.num_hidden = num_hidden
         self.num_visible = None
-        self.weights = None
-        self.forward_bias = None
-        self.backward_bias = None
 
     def fit(self, x, learning_rate, batch_size, cd_iterations, epochs, use_sampling=False):
         if self.num_visible != x.shape[1]:
