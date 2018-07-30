@@ -39,7 +39,7 @@ class RestrictedBoltzmannMachine:
                         recon = (np.random.uniform(size=self.num_visible) < recon_prob).astype(int)
                     else:
                         recon = recon_prob
-                    recon_hidden_activation = recon_prob.dot(self.weights) + self.forward_bias
+                    recon_hidden_activation = recon.dot(self.weights) + self.forward_bias
                     recon_hidden_prob = 1 / (1 + np.exp(-recon_hidden_activation))
                     if use_sampling:
                         recon_hidden = (np.random.uniform(size=self.num_hidden) < recon_hidden_prob).astype(int)
