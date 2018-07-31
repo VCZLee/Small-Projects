@@ -8,11 +8,12 @@ x = np.array([[1, 1, 1, 0, 1],
               [1, 1, 1, 1, 0],
               [0, 0, 0, 1, 0]])
 
-x = np.array([[1, 1, 1, 0, 1]])
+# x = np.array([[1, 0, 0, 0, 0]])
 
 num_visible = x.shape[1]
-num_hidden = 3
+num_hidden = 2
 use_sampling = True
+learning_rate = 0.1
 
 with tf.Session() as sess:
     weights = tf.random_normal((num_visible, num_hidden))
@@ -25,18 +26,21 @@ with tf.Session() as sess:
         hidden = tf.to_float(tf.less(tf.random_uniform((1, num_hidden)), hidden_prob))
     else:
         hidden = hidden_prob
-    print(sess.run(hidden, {visible: x}))
     recon_activation = tf.add(tf.matmul(hidden, weights, transpose_b=True), backward_bias)
     recon_prob = tf.divide(1.0, tf.add(1.0, tf.exp(tf.negative(recon_activation))))
     if use_sampling:
         recon = tf.to_float(tf.less(tf.random_uniform((1, num_visible)), recon_prob))
     else:
         recon = recon_prob
-    print(sess.run(recon, {visible:x}))
     recon_hidden_activation = tf.add(tf.matmul(recon, weights), forward_bias)
     recon_hidden_prob = tf.divide(1.0, tf.add(1.0, tf.exp(tf.negative(recon_hidden_activation))))
     if use_sampling:
         recon_hidden = tf.to_float(tf.less(tf.random_uniform((1, num_hidden)), recon_hidden_prob))
     else:
         recon_hidden = recon_hidden_prob
-    print(sess.run(recon_hidden, {visible: x}))
+    first_outer_product = tf.matmul(visible, hidden, transpose_a=True)
+    second_outer_product = tf.matmul(recon, recon_hidden, transpose_a=True)
+    contrastive_divergence = tf.divide(tf.subtract(first_outer_product, second_outer_product), x.shape[0])
+    forward_bias_update = tf.reduce_mean(tf.subtract(hidden, recon_hidden), 0)
+    backward_bias_update = tf.reduce_mean(tf.subtract(visible, recon), 0)
+    print(sess.run(backward_bias_update, {visible: x}))
