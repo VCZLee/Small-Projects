@@ -14,7 +14,11 @@ num_visible = x.shape[1]
 num_hidden = 2
 use_sampling = False
 learning_rate = 0.25
-epochs = 10000
+num_epochs = 1000
+num_cd_iterations = 1000
+batch_size = 2
+
+
 
 with tf.Session() as sess:
     weights = tf.Variable(tf.random_normal((num_visible, num_hidden)))
@@ -28,20 +32,24 @@ with tf.Session() as sess:
         hidden = tf.to_float(tf.less(tf.random_uniform((1, num_hidden)), hidden_prob))
     else:
         hidden = hidden_prob
+    hidden_intermediary = hidden
 
-    recon_activation = tf.add(tf.matmul(hidden, weights, transpose_b=True), backward_bias)
-    recon_prob = tf.divide(1.0, tf.add(1.0, tf.exp(tf.negative(recon_activation))))
-    if use_sampling:
-        recon = tf.to_float(tf.less(tf.random_uniform((1, num_visible)), recon_prob))
-    else:
-        recon = recon_prob
+    for cd_iteration in range(num_cd_iterations):
+        recon_activation = tf.add(tf.matmul(hidden_intermediary, weights, transpose_b=True), backward_bias)
+        recon_prob = tf.divide(1.0, tf.add(1.0, tf.exp(tf.negative(recon_activation))))
+        if use_sampling:
+            recon = tf.to_float(tf.less(tf.random_uniform((1, num_visible)), recon_prob))
+        else:
+            recon = recon_prob
 
-    recon_hidden_activation = tf.add(tf.matmul(recon, weights), forward_bias)
-    recon_hidden_prob = tf.divide(1.0, tf.add(1.0, tf.exp(tf.negative(recon_hidden_activation))))
-    if use_sampling:
-        recon_hidden = tf.to_float(tf.less(tf.random_uniform((1, num_hidden)), recon_hidden_prob))
-    else:
-        recon_hidden = recon_hidden_prob
+        recon_hidden_activation = tf.add(tf.matmul(recon, weights), forward_bias)
+        recon_hidden_prob = tf.divide(1.0, tf.add(1.0, tf.exp(tf.negative(recon_hidden_activation))))
+        if use_sampling:
+            recon_hidden = tf.to_float(tf.less(tf.random_uniform((1, num_hidden)), recon_hidden_prob))
+        else:
+            recon_hidden = recon_hidden_prob
+
+        hidden_intermediary = recon_hidden
 
     first_outer_product = tf.matmul(visible, hidden, transpose_a=True)
     second_outer_product = tf.matmul(recon, recon_hidden, transpose_a=True)
@@ -55,8 +63,9 @@ with tf.Session() as sess:
     update_backward_bias = tf.assign_add(backward_bias, tf.multiply(learning_rate, backward_bias_update))
 
     sess.run(tf.global_variables_initializer())
+    tf.summary.FileWriter('/home/jintoboy/github/Small-Projects/Restricted Boltzmann Machine/graph', sess.graph)
 
-    for epoch in range(epochs):
+    for epoch in range(num_epochs):
         sess.run((update_weights, update_forward_bias, update_backward_bias), {visible: x})
     print(sess.run(recon, {visible: x}))
 
