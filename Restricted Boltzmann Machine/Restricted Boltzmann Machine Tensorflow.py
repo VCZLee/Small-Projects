@@ -1,15 +1,6 @@
 import numpy as np
 import tensorflow as tf
 
-data = np.array([[1, 1, 1, 0, 1],
-                 [1, 1, 1, 0, 0],
-                 [0, 0, 0, 1, 1],
-                 [0, 0, 0, 0, 1],
-                 [1, 1, 1, 1, 0],
-                 [0, 0, 0, 1, 0]])
-
-# data = np.array([[1, 0, 0, 0, 0]])
-
 
 class RestrictedBoltzmannMachine:
     def __init__(self, num_hidden):
@@ -127,11 +118,40 @@ class RestrictedBoltzmannMachine:
             return sess.run(recon, {visible: x})
 
 
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import Binarizer
 
+data = pd.read_csv("/media/jintoboy/Main Storage/ML_Projects/MNIST/train.csv", index_col = None)
+data = data.loc[(data.label == 7)]
+data = data.drop('label', 1)
 
-rbm = RestrictedBoltzmannMachine(3)
-rbm = rbm.fit(data, 0.15, 6, 25000, True)
-# a = rbm.transform(data,True)
-# print(a)
-# print(rbm.inverse_transform(a,True))
-print(rbm.reconstruct(data,True))
+data = data.values
+
+quantizer = Binarizer(threshold = 127.5).fit(data)
+data = quantizer.transform(data)
+
+random_rows = np.random.choice(data.shape[0], 20, replace=False)
+
+ROW = 4
+COLUMN = 5
+for i in range(ROW * COLUMN):
+    image = data[random_rows, :][i].reshape((28, 28))
+    plt.subplot(ROW, COLUMN, i+1)
+    plt.imshow(image, cmap='gray')
+    plt.axis('off')  # do not show axis value
+plt.tight_layout()   # automatic padding between subplots
+plt.show()
+
+rbm = RestrictedBoltzmannMachine(num_hidden=100)
+rbm = rbm.fit(data, 0.15, 3, 10000)
+
+reconstruction = rbm.reconstruct(data[random_rows, :])
+
+for i in range(ROW * COLUMN):
+    image = reconstruction[i].reshape((28, 28))
+    plt.subplot(ROW, COLUMN, i+1)
+    plt.imshow(image, cmap='gray')
+    plt.axis('off')
+plt.tight_layout()
+plt.show()
