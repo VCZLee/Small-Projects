@@ -9,6 +9,7 @@ class RestrictedBoltzmannMachine:
         self.backward_bias = None
         self.num_hidden = num_hidden
         self.num_visible = None
+        self.test = None
 
     def fit(self, x, learning_rate, batch_size, num_epochs, num_cd_iterations=1, use_sampling=False):
         with tf.Session() as sess:
@@ -51,6 +52,7 @@ class RestrictedBoltzmannMachine:
                     recon_hidden = recon_hidden_prob
 
                 hidden_intermediary = recon_hidden
+
 
             first_outer_product = tf.matmul(visible, hidden, transpose_a=True)
             second_outer_product = tf.matmul(recon, recon_hidden, transpose_a=True)
@@ -131,6 +133,7 @@ data = data.values
 quantizer = Binarizer(threshold = 127.5).fit(data)
 data = quantizer.transform(data)
 
+np.random.seed(987)
 random_rows = np.random.choice(data.shape[0], 20, replace=False)
 
 ROW = 4
@@ -144,7 +147,8 @@ plt.tight_layout()   # automatic padding between subplots
 plt.show()
 
 rbm = RestrictedBoltzmannMachine(num_hidden=100)
-rbm = rbm.fit(data, 0.15, 3, 10000)
+rbm = rbm.fit(data, learning_rate=0.25, batch_size=10, num_epochs=1000, num_cd_iterations=1)
+
 
 reconstruction = rbm.reconstruct(data[random_rows, :])
 
