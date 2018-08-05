@@ -11,12 +11,22 @@ class RestrictedBoltzmannMachine:
         self.backward_bias = None
         self.num_hidden = num_hidden
         self.num_visible = None
+        self.test = None
 
     def fit(self, x, learning_rate, batch_size, cd_iterations, epochs, use_sampling=False):
         if self.num_visible != x.shape[1]:
             self.num_visible = x.shape[1]
-            self.weights = np.random.randn(self.num_visible, self.num_hidden)
+        if self.weights is not None:
+            pass
+        else:
+            self.weights = np.random.randn(self.num_visible, self.num_hidden).astype(np.float32)
+        if self.forward_bias is not None:
+            pass
+        else:
             self.forward_bias = np.random.randn(1, self.num_hidden)
+        if self.backward_bias is not None:
+            pass
+        else:
             self.backward_bias = np.random.randn(1, self.num_visible)
         for epoch in range(epochs):
             random_rows = np.random.choice(x.shape[0], batch_size, replace=False)
@@ -50,6 +60,8 @@ class RestrictedBoltzmannMachine:
                 contrastive_divergence_list.append(np.outer(visible, hidden) - np.outer(recon, recon_hidden))
                 forward_bias_list.append(hidden - recon_hidden)
                 backward_bias_list.append(visible - recon)
+            self.test = recon_hidden
+
             self.weights = self.weights + learning_rate * np.mean(contrastive_divergence_list, axis=0)
             self.forward_bias = self.forward_bias + learning_rate * np.mean(forward_bias_list, axis=0)
             self.backward_bias = self.backward_bias + learning_rate * np.mean(backward_bias_list, axis=0)
@@ -100,13 +112,16 @@ class RestrictedBoltzmannMachine:
         return output
 
 
-data = pd.read_csv("C:/Users/Jintoboy/PycharmProjects/Jupyter-Notebooks/Kaggle/MNIST/Data/train.csv", index_col = None)
+data = pd.read_csv("/media/jintoboy/Main Storage/ML_Projects/MNIST/train.csv", index_col = None)
 data = data.loc[(data.label == 7)]
 data = data.drop('label', 1)
+
+# data = data.values
 
 quantizer = Binarizer(threshold = 127.5).fit(data)
 data = quantizer.transform(data)
 
+np.random.seed(987)
 random_rows = np.random.choice(data.shape[0], 20, replace=False)
 
 ROW = 4
@@ -121,7 +136,7 @@ plt.show()
 
 
 rbm = RestrictedBoltzmannMachine(num_hidden=100)
-rbm = rbm.fit(data, learning_rate=0.15, batch_size=3, cd_iterations=1, epochs=10000)
+rbm = rbm.fit(data, learning_rate=0.15, batch_size=10, cd_iterations=1, epochs=1000)
 
 
 reconstruction = rbm.reconstruct(data[random_rows, :])
